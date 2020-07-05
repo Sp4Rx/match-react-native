@@ -11,11 +11,25 @@ export default function App() {
   const [selected, setSelected] = React.useState(new Map());
 
   const onSelect = React.useCallback(
-    id => {
+    (index) => {
       const newSelected = new Map(selected);
-      if (selected.get(id) == null || selected.get(id) == CardStates.INITIAL) {
-        newSelected.set(id, CardStates.SELECTED);
+      if (selected.get(index) == null || selected.get(index) == CardStates.INITIAL) {
+        newSelected.set(index, CardStates.SELECTED);
       }
+
+      const selectedIndexes = getIndexesByState(newSelected, CardStates.SELECTED);
+
+      //Can't think of a better logic now
+      if (selectedIndexes.length == 2) {      
+        if (DATA[selectedIndexes[0]] == DATA[selectedIndexes[1]]) {
+          newSelected.set(selectedIndexes[0], CardStates.MATCHED);
+          newSelected.set(selectedIndexes[1], CardStates.MATCHED);
+        } else {
+          newSelected.set(selectedIndexes[0], CardStates.INITIAL);
+          newSelected.set(selectedIndexes[1], CardStates.INITIAL);
+        }
+      }
+      // checkMatch(selectedIndexes, selectedValue,index, newSelected)
       setSelected(newSelected);
     },
     [selected],
@@ -36,10 +50,22 @@ export default function App() {
       <FlatList
         numColumns={2}
         data={DATA}
-        renderItem={({ item, index }) => <Card value={item} id={index} onSelect={onSelect} state={selected.get(index)} />}
+        renderItem={({ item, index }) => <Card item={item} index={index} onSelect={onSelect} state={selected.get(index)} />}
         keyExtractor={(item, index) => index.toString()} />
     </View>
   );
+
+  function getIndexesByState(itemMap, state) {
+    let indexes = [];
+    let keys = [...itemMap.keys()];
+    for (const key of keys) {
+      if (itemMap.get(key) === state) {
+        indexes.push(key);
+
+      }
+    }
+    return indexes;
+  }
 }
 
 const styles = StyleSheet.create({

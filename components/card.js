@@ -42,18 +42,18 @@ const styles = StyleSheet.create({
     },
 })
 
-function Card(props) {
+function Card({ index, item, state, onSelect }) {
     return (
         <TouchableOpacity
             style={
-                props.state == null || props.state == CardStates.INITIAL ?
+                state == null || state == CardStates.INITIAL ?
                     styles.roundedRectangleGreen :
-                    props.state == CardStates.SELECTED ?
+                    state == CardStates.SELECTED ?
                         styles.roundedRectangleWhiteBlackBorder :
                         styles.roundedRectangleWhiteBlueBorder}
-            onPress={() => props.onSelect(props.id)} >
+            onPress={() => onSelect(index)} >
             <View >
-                <Text style={styles.value}>{props.state == null || props.state == CardStates.INITIAL ? '' : props.value}</Text>
+                <Text style={styles.value}>{state == null || state == CardStates.INITIAL ? '' : item}</Text>
             </View>
         </TouchableOpacity>
     );
