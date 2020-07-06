@@ -1,13 +1,27 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, FlatList, View } from 'react-native';
 import { Header } from './components/header.js';
 import { Status } from './components/status.js';
 import { Card, CardStates } from './components/card.js';
 
 export default function App() {
+  const MAX_LEVEL = 10;
   const [selected, setSelected] = useState(new Map());
   const [data, setData] = useState(generateRandomCards(4));
+  const [score, setScore] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [columnCount, setColumnCount] = useState(2);
+  const [clearSelected, setClearSelected] = useState(false);
+  const [time, setTime] = useState('00:00');
+
+
+  useEffect(() => {
+    if (clearSelected) {
+      selected.clear();
+      setClearSelected(false);
+    }
+  });
 
   const onSelect = React.useCallback(
     (index) => {
@@ -23,6 +37,16 @@ export default function App() {
         if (data[selectedIndexes[0]] == data[selectedIndexes[1]]) {
           newSelected.set(selectedIndexes[0], CardStates.MATCHED);
           newSelected.set(selectedIndexes[1], CardStates.MATCHED);
+          setScore(score + 1);
+
+          if (getIndexesByState(newSelected, CardStates.MATCHED).length == data.length) {
+            if (level >= MAX_LEVEL) {
+              alert('You won the game');
+            } else {
+              nextLevel();
+            }
+          }
+
         } else {
           newSelected.set(selectedIndexes[0], CardStates.INITIAL);
           newSelected.set(selectedIndexes[1], CardStates.INITIAL);
@@ -38,15 +62,16 @@ export default function App() {
       <StatusBar style="auto" />
       <Header value="Memory Game" />
       <View style={styles.row} >
-        <Status title="Level" subTitle="1" />
-        <Status title="Score" subTitle="0" />
+        <Status title="Level" subTitle={level} />
+        <Status title="Score" subTitle={score} />
       </View>
 
       <View style={{ paddingBottom: 40 }}>
-        <Status title="Time Left" subTitle="0:57" />
+        <Status title="Time Left" subTitle={time} />
       </View>
       <FlatList
-        numColumns={2}
+        key={columnCount}
+        numColumns={columnCount}
         data={data}
         renderItem={({ item, index }) => <Card item={item} index={index} onSelect={onSelect} state={selected.get(index)} />}
         keyExtractor={(item, index) => index.toString()} />
@@ -58,10 +83,29 @@ export default function App() {
     for (const key of itemMap.keys()) {
       if (itemMap.get(key) === state) {
         indexes.push(key);
-
       }
     }
     return indexes;
+  }
+
+  function updateTime() {
+    setTime(time + 1);
+
+  }
+
+  function nextLevel() {
+    const newData = generateRandomCards(data.length + 2);
+    setData(newData);
+    setSelected(selected.clear());
+    setLevel(level + 1);
+    setColumnCount(newData.length % 3 == 0 ?
+      3 :
+      newData.length % 4 == 0 ?
+        4 :
+        2);
+
+    setClearSelected(true);
+
   }
 }
 
