@@ -29,7 +29,6 @@ export default function App() {
           newSelected.set(selectedIndexes[1], CardStates.INITIAL);
         }
       }
-      // checkMatch(selectedIndexes, selectedValue,index, newSelected)
       setSelected(newSelected);
     },
     [selected],
@@ -57,8 +56,7 @@ export default function App() {
 
   function getIndexesByState(itemMap, state) {
     let indexes = [];
-    let keys = [...itemMap.keys()];
-    for (const key of keys) {
+    for (const key of itemMap.keys()) {
       if (itemMap.get(key) === state) {
         indexes.push(key);
 
