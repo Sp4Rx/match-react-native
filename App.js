@@ -1,14 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, FlatList, View } from 'react-native';
 import { Header } from './components/header.js';
 import { Status } from './components/status.js';
 import { Card, CardStates } from './components/card.js';
 
 export default function App() {
-  const DATA = [1, 1, 2, 2];
-
-  const [selected, setSelected] = React.useState(new Map());
+  const [selected, setSelected] = useState(new Map());
+  const [data, setData] = useState(generateRandomCards(4));
 
   const onSelect = React.useCallback(
     (index) => {
@@ -20,8 +19,8 @@ export default function App() {
       const selectedIndexes = getIndexesByState(newSelected, CardStates.SELECTED);
 
       //Can't think of a better logic now
-      if (selectedIndexes.length == 2) {      
-        if (DATA[selectedIndexes[0]] == DATA[selectedIndexes[1]]) {
+      if (selectedIndexes.length == 2) {
+        if (data[selectedIndexes[0]] == data[selectedIndexes[1]]) {
           newSelected.set(selectedIndexes[0], CardStates.MATCHED);
           newSelected.set(selectedIndexes[1], CardStates.MATCHED);
         } else {
@@ -48,7 +47,7 @@ export default function App() {
       </View>
       <FlatList
         numColumns={2}
-        data={DATA}
+        data={data}
         renderItem={({ item, index }) => <Card item={item} index={index} onSelect={onSelect} state={selected.get(index)} />}
         keyExtractor={(item, index) => index.toString()} />
     </View>
@@ -64,6 +63,37 @@ export default function App() {
     }
     return indexes;
   }
+}
+
+function generateRandomCards(length) {
+  if (length % 2 != 0) {
+    throw new Error('length must be even')
+  }
+
+  let data = new Array(length);
+
+  for (let i = 0; i < data.length; i += 2) {
+    data[i] = Math.floor(Math.random() * 100) + 1;
+    data[i + 1] = data[i];
+  }
+
+  return shuffle(data);
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  while (0 !== currentIndex) {
+
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
 }
 
 const styles = StyleSheet.create({
