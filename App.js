@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, FlatList, View } from 'react-native';
 import { Header } from './components/header.js';
 import { Status } from './components/status.js';
@@ -15,22 +15,27 @@ export default function App() {
   const [clearSelected, setClearSelected] = useState(false);
   const [time, setTime] = useState('00:00');
 
-
   useEffect(() => {
     if (clearSelected) {
       selected.clear();
       setClearSelected(false);
     }
-  });
+  }, [clearSelected, selected]);
 
-  const onSelect = React.useCallback(
+  const onSelect = useCallback(
     (index) => {
       const newSelected = new Map(selected);
-      if (selected.get(index) == null || selected.get(index) == CardStates.INITIAL) {
+      if (
+        selected.get(index) == null ||
+        selected.get(index) == CardStates.INITIAL
+      ) {
         newSelected.set(index, CardStates.SELECTED);
       }
 
-      const selectedIndexes = getIndexesByState(newSelected, CardStates.SELECTED);
+      const selectedIndexes = getIndexesByState(
+        newSelected,
+        CardStates.SELECTED
+      );
 
       //Can't think of a better logic now
       if (selectedIndexes.length == 2) {
@@ -39,14 +44,25 @@ export default function App() {
           newSelected.set(selectedIndexes[1], CardStates.MATCHED);
           setScore(score + 1);
 
-          if (getIndexesByState(newSelected, CardStates.MATCHED).length == data.length) {
+          if (
+            getIndexesByState(newSelected, CardStates.MATCHED).length ==
+            data.length
+          ) {
             if (level >= MAX_LEVEL) {
               alert('You won the game');
             } else {
-              nextLevel();
+              // Goto Next level
+              const newData = generateRandomCards(data.length + 2);
+              setData(newData);
+              setSelected(selected.clear());
+              setLevel(level + 1);
+              setColumnCount(
+                newData.length % 3 == 0 ? 3 : newData.length % 4 == 0 ? 4 : 2
+              );
+
+              setClearSelected(true);
             }
           }
-
         } else {
           newSelected.set(selectedIndexes[0], CardStates.INITIAL);
           newSelected.set(selectedIndexes[1], CardStates.INITIAL);
@@ -54,14 +70,14 @@ export default function App() {
       }
       setSelected(newSelected);
     },
-    [selected],
+    [selected, data, level, score]
   );
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
       <Header value="Memory Game" />
-      <View style={styles.row} >
+      <View style={styles.row}>
         <Status title="Level" subTitle={level} />
         <Status title="Score" subTitle={score} />
       </View>
@@ -73,8 +89,16 @@ export default function App() {
         key={columnCount}
         numColumns={columnCount}
         data={data}
-        renderItem={({ item, index }) => <Card item={item} index={index} onSelect={onSelect} state={selected.get(index)} />}
-        keyExtractor={(item, index) => index.toString()} />
+        renderItem={({ item, index }) => (
+          <Card
+            item={item}
+            index={index}
+            onSelect={onSelect}
+            state={selected.get(index)}
+          />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+      />
     </View>
   );
 
@@ -90,28 +114,12 @@ export default function App() {
 
   function updateTime() {
     setTime(time + 1);
-
-  }
-
-  function nextLevel() {
-    const newData = generateRandomCards(data.length + 2);
-    setData(newData);
-    setSelected(selected.clear());
-    setLevel(level + 1);
-    setColumnCount(newData.length % 3 == 0 ?
-      3 :
-      newData.length % 4 == 0 ?
-        4 :
-        2);
-
-    setClearSelected(true);
-
   }
 }
 
 function generateRandomCards(length) {
   if (length % 2 != 0) {
-    throw new Error('length must be even')
+    throw new Error('length must be even');
   }
 
   let data = new Array(length);
@@ -125,10 +133,11 @@ function generateRandomCards(length) {
 }
 
 function shuffle(array) {
-  var currentIndex = array.length, temporaryValue, randomIndex;
+  var currentIndex = array.length,
+    temporaryValue,
+    randomIndex;
 
   while (0 !== currentIndex) {
-
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex -= 1;
 
@@ -147,11 +156,9 @@ const styles = StyleSheet.create({
     padding: 28,
   },
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 8,
     paddingHorizontal: 40,
   },
 });
-
-
